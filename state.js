@@ -4,7 +4,7 @@ const setLast = (arr, val) => {
   arr[arr.length - 1] = val;
 };
 
-const numProbabilities = [1,2,3,4];
+const numProbabilities = [1,2,3,4,5,6,7,8,9];
 
 let deckTiers = JSON.parse(localStorage.getItem('deckTiers')) || [Object.keys(window.cities)];
 let infectionDiscardPile = JSON.parse(localStorage.getItem('infectionDiscardPile')) || [];
@@ -12,6 +12,7 @@ const resiliantPopulations = JSON.parse(localStorage.getItem('resiliantPopulatio
 let probabilityTiers = [];
 
 function epidemic(event) {
+  event.preventDefault();
   const bottomCard = event.target.dataset.city;
   infectionDiscardPile.push(bottomCard);
   infectionDiscardPile = uniq(infectionDiscardPile);
@@ -65,7 +66,20 @@ function updateProbabilities() {
 function updateUI() {
   window.tiers.innerHTML = deckTiers.slice().reverse().map((tier, i) => {
     const tierList = sortByColor(tier)
-      .map(city => `<li class="tier-city" style="color: ${window.cities[city]}">${city}</li>`)
+      .map(city => {
+        let clickStyle = '';
+        let clickAction = '';
+        let oncontextmenu = '';
+        if (i === 0) {
+          clickStyle = 'cursor: pointer; text-decoration: underline;';
+          clickAction = `data-city="${city}" onclick="drawInfectionCard(event)"`;
+        }
+        if (i === deckTiers.length - 1) {
+          clickStyle = 'cursor: pointer; text-decoration: underline;';
+          oncontextmenu = `data-city="${city}" oncontextmenu="epidemic(event)"`;
+        }
+        return `<li class="tier-city" style="${clickStyle} color: ${window.cities[city]}" ${clickAction} ${oncontextmenu}>${city}</li>`;
+      })
       .join('\n');
     const probs = probabilityTiers[i].map(prob => Math.round(prob * 100) + '%');
     return `<div>
