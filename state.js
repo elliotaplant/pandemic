@@ -23,7 +23,6 @@ function epidemic(event) {
 
 function drawInfectionCard(event) {
   const city = event.target.dataset.city;
-  console.log('city', city);
   setLast(deckTiers, last(deckTiers).filter(c => c !== city));
   infectionDiscardPile.push(city);
   if (last(deckTiers).length === 0) {
