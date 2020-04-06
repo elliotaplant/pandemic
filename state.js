@@ -1,11 +1,10 @@
-const uniq = (arr) => Array.from(new Set(arr));
 const last = (arr) => arr[arr.length - 1];
 const setLast = (arr, val) => {
   arr[arr.length - 1] = val;
 };
 
-const deckTiers = [Object.keys(window.cities)];
-let infectionDiscardPile = [];
+const deckTiers = JSON.parse(localStorage.getItem('deckTiers')) || [Object.keys(window.cities)];
+let infectionDiscardPile = JSON.parse(localStorage.getItem('infectionDiscardPile')) || [];
 
 function epidemic(event) {
   const bottomCard = event.target.dataset.city;
@@ -28,8 +27,8 @@ function uiUpdater(fn) {
   return (...args) => {
     fn(...args);
     updateUI();
-    // localStorage.setItem('deckTiers', JSON.stringify(deckTiers));
-    // localStorage.setItem('infectionDiscardPile', JSON.stringify(deckTiers));
+    localStorage.setItem('deckTiers', JSON.stringify(deckTiers));
+    localStorage.setItem('infectionDiscardPile', JSON.stringify(infectionDiscardPile));
   };
 }
 

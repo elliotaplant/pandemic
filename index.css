@@ -5,9 +5,12 @@
 .city-list {
   display: flex;
   flex-flow: wrap;
-  list-style: none;
 }
 
 .tier-city {
   padding: 10px;
+}
+
+li {
+  list-style: none;
 }
