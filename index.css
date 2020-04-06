@@ -11,6 +11,10 @@
   padding: 10px;
 }
 
+.prob {
+  padding-right: 10px;
+}
+
 li {
   list-style: none;
 }
