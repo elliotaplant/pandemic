@@ -1,0 +1,13 @@
+.tier {
+  border-bottom: 1px solid black;
+}
+
+.city-list {
+  display: flex;
+  flex-flow: wrap;
+  list-style: none;
+}
+
+.tier-city {
+  padding: 10px;
+}
