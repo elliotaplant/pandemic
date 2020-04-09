@@ -5,7 +5,7 @@
     <title>Pandemic</title>
     <link rel="stylesheet" href="index.css">
   </head>
-  <body style="background-color: #eee">
+  <body>
     <button type="button" name="button" onclick="reset()">Reset</button>
     <button type="button" name="button" id="undoBtn" disabled onclick="undo()">Undo</button>
     <button type="button" name="button" id="redoBtn" disabled onclick="redo()">redo</button>
@@ -21,7 +21,7 @@
     <ul class="city-list" id="discardPile"></ul>
     <h2>Tiers</h2>
     <div id="tiers"></div>
-    <h2>Resiliant Populations</h2>
+    <h2 id="resiliantPopulationsHeader">Resiliant Populations</h2>
     <div id="resiliantPopulations"></div>
 
     <script src="cities.js"></script>

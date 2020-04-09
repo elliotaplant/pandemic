@@ -18,3 +18,8 @@
 li {
   list-style: none;
 }
+
+body {
+  background-color: #eee;
+  font-family: sans-serif;
+}

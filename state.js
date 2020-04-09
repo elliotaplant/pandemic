@@ -41,8 +41,14 @@ function resiliant(event) {
 function uiUpdater(fn) {
   return (...args) => {
     fn(...args);
-    updateHistory();
     updateUI();
+  };
+}
+
+function historyUpdator(fn) {
+  return (...args) => {
+    fn(...args);
+    updateHistory();
   };
 }
 
@@ -111,6 +117,12 @@ function updateUI() {
     .map(city => `<li class="tier-city" style="color: ${window.cities[city]}">${city}</li>`)
     .join('\n');
 
+  if (resiliantPopulations.length) {
+    window.resiliantPopulationsHeader.style.display = 'block';
+  } else {
+    window.resiliantPopulationsHeader.style.display = 'none';
+  }
+
   if (window.city.value) {
     window.matchingCitiesList.innerHTML = Object.keys(window.cities)
       .filter(city => city.toLowerCase().startsWith(window.city.value.toLowerCase()) &&
@@ -148,10 +160,6 @@ function updateUI() {
 }
 
 function storeState() {
-  console.log('deckTiers           ', deckTiers);
-  console.log('infectionDiscardPile', infectionDiscardPile);
-  console.log('history             ', history);
-  console.log('historyIndex        ', historyIndex);
   localStorage.setItem('deckTiers', JSON.stringify(deckTiers));
   localStorage.setItem('infectionDiscardPile', JSON.stringify(infectionDiscardPile));
   localStorage.setItem('history', JSON.stringify(history));
@@ -162,7 +170,6 @@ function updateHistory() {
   history = history.slice(0, historyIndex + 1);
   history.push(JSON.stringify({ deckTiers, infectionDiscardPile, resiliantPopulations }));
   historyIndex = history.length - 1;
-  console.log('updating history', history.length, historyIndex);
   if (history.length && historyIndex !== 0) {
     window.undoBtn.disabled = null;
   }
@@ -174,7 +181,6 @@ function undo() {
   deckTiers = currentState.deckTiers;
   infectionDiscardPile = currentState.infectionDiscardPile;
   resiliantPopulations = currentState.resiliantPopulations;
-  console.log('undo', history.length, historyIndex, deckTiers.length, infectionDiscardPile.length);
   updateUI();
 }
 
@@ -184,7 +190,6 @@ function redo() {
   deckTiers = currentState.deckTiers;
   infectionDiscardPile = currentState.infectionDiscardPile;
   resiliantPopulations = currentState.resiliantPopulations;
-  console.log('redo', history.length, historyIndex, deckTiers.length, infectionDiscardPile.length);
   updateUI();
 }
 
@@ -196,9 +201,9 @@ window.reset = () => {
   updateUI();
 };
 
-window.epidemic = uiUpdater(epidemic);
-window.drawInfectionCard = uiUpdater(drawInfectionCard);
-window.resiliant = uiUpdater(resiliant);
+window.epidemic = uiUpdater(historyUpdator(epidemic));
+window.drawInfectionCard = uiUpdater(historyUpdator(drawInfectionCard));
+window.resiliant = uiUpdater(historyUpdator(resiliant));
 window.city.onkeyup = uiUpdater(() => {});
 window.undo = undo;
 window.redo = redo;
