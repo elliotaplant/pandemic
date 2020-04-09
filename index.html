@@ -7,6 +7,8 @@
   </head>
   <body style="background-color: #eee">
     <button type="button" name="button" onclick="reset()">Reset</button>
+    <button type="button" name="button" id="undoBtn" disabled onclick="undo()">Undo</button>
+    <button type="button" name="button" id="redoBtn" disabled onclick="redo()">redo</button>
     <div>
       <h1>Cities</h1>
       <div id="cityButtons"></div>
@@ -24,6 +26,5 @@
 
     <script src="cities.js"></script>
     <script src="state.js"></script>
-    <script src="index.js"></script>
   </body>
 </html>

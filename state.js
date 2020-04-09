@@ -4,12 +4,14 @@ const setLast = (arr, val) => {
   arr[arr.length - 1] = val;
 };
 
-const numProbabilities = [1,2,3,4,5,6,7,8,9];
+const numProbabilities = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 let deckTiers = JSON.parse(localStorage.getItem('deckTiers')) || [Object.keys(window.cities)];
 let infectionDiscardPile = JSON.parse(localStorage.getItem('infectionDiscardPile')) || [];
-const resiliantPopulations = JSON.parse(localStorage.getItem('resiliantPopulations')) || [];
+let resiliantPopulations = JSON.parse(localStorage.getItem('resiliantPopulations')) || [];
 let probabilityTiers = [];
+let history = JSON.parse(localStorage.getItem('history')) || [{ deckTiers, infectionDiscardPile }];
+let historyIndex = JSON.parse(localStorage.getItem('historyIndex')) || 0;
 
 function epidemic(event) {
   event.preventDefault();
@@ -39,21 +41,25 @@ function resiliant(event) {
 function uiUpdater(fn) {
   return (...args) => {
     fn(...args);
-    updateProbabilities();
+    updateHistory();
     updateUI();
   };
 }
 
 function sortByColor(cityList) {
-  return cityList.sort((a, b) => window.cities[a] < window.cities[b] ? 1 : -1);
+  return cityList.sort((a, b) => {
+    const aColor = window.cities[a];
+    const bColor = window.cities[b];
+    return aColor < bColor ? 1 : (aColor > bColor) ? -1 : (a > b ? 1 : (a < b ? -1 : 0));
+  });
 }
 
 function updateProbabilities() {
-  probabilityTiers = deckTiers.slice().reverse().map(tier => tier.length).reduce(({ out, cardsAbove } , tierSize) => {
+  probabilityTiers = deckTiers.slice().reverse().map(tier => tier.length).reduce(({ out, cardsAbove }, tierSize) => {
     out.push(numProbabilities.map(cardsDrawn => {
       let majungus = 1;
       for (let i = 1; i <= cardsDrawn - cardsAbove; i++) {
-        majungus *= (tierSize - i)/Math.max(tierSize - (i - 1), 1);
+        majungus *= (tierSize - i) / Math.max(tierSize - (i - 1), 1);
       }
       return 1 - majungus;
     }));
@@ -63,6 +69,7 @@ function updateProbabilities() {
 }
 
 function updateUI() {
+  updateProbabilities();
   window.tiers.innerHTML = deckTiers.slice().reverse().map((tier, i) => {
     const tierList = sortByColor(tier)
       .map(city => {
@@ -77,7 +84,16 @@ function updateUI() {
           clickStyle = 'cursor: pointer; text-decoration: underline;';
           oncontextmenu = `data-city="${city}" oncontextmenu="epidemic(event)"`;
         }
-        return `<li class="tier-city" style="${clickStyle} color: ${window.cities[city]}" ${clickAction} ${oncontextmenu}>${city}</li>`;
+        return `
+          <li
+            class="tier-city"
+            style="${clickStyle} color: ${window.cities[city]}"
+            ${clickAction}
+            ${oncontextmenu}
+          >
+            ${city}
+          </li>
+        `;
       })
       .join('\n');
     const probs = probabilityTiers[i].map(prob => Math.round(prob * 100) + '%');
@@ -98,7 +114,7 @@ function updateUI() {
   if (window.city.value) {
     window.matchingCitiesList.innerHTML = Object.keys(window.cities)
       .filter(city => city.toLowerCase().startsWith(window.city.value.toLowerCase()) &&
-      !resiliantPopulations.includes(city))
+        !resiliantPopulations.includes(city))
       .map(city => {
         let buttons = '';
         if (deckTiers[deckTiers.length - 1].includes(city)) {
@@ -117,16 +133,66 @@ function updateUI() {
     window.matchingCitiesList.innerHTML = '';
   }
 
-  localStorage.setItem('deckTiers', JSON.stringify(deckTiers));
-  localStorage.setItem('infectionDiscardPile', JSON.stringify(infectionDiscardPile));
+  if (historyIndex === history.length - 1) {
+    window.redoBtn.disabled = true;
+  } else {
+    window.redoBtn.disabled = null;
+  }
+
+  if (history.length < 2 || historyIndex === 0) {
+    window.undoBtn.disabled = true;
+  } else {
+    window.undoBtn.disabled = null;
+  }
+  storeState();
 }
 
+function storeState() {
+  console.log('deckTiers           ', deckTiers);
+  console.log('infectionDiscardPile', infectionDiscardPile);
+  console.log('history             ', history);
+  console.log('historyIndex        ', historyIndex);
+  localStorage.setItem('deckTiers', JSON.stringify(deckTiers));
+  localStorage.setItem('infectionDiscardPile', JSON.stringify(infectionDiscardPile));
+  localStorage.setItem('history', JSON.stringify(history));
+  localStorage.setItem('historyIndex', JSON.stringify(historyIndex));
+}
 
+function updateHistory() {
+  history = history.slice(0, historyIndex + 1);
+  history.push(JSON.stringify({ deckTiers, infectionDiscardPile, resiliantPopulations }));
+  historyIndex = history.length - 1;
+  console.log('updating history', history.length, historyIndex);
+  if (history.length && historyIndex !== 0) {
+    window.undoBtn.disabled = null;
+  }
+}
+
+function undo() {
+  historyIndex = Math.max(historyIndex - 1, -1);
+  const currentState = JSON.parse(history[historyIndex]);
+  deckTiers = currentState.deckTiers;
+  infectionDiscardPile = currentState.infectionDiscardPile;
+  resiliantPopulations = currentState.resiliantPopulations;
+  console.log('undo', history.length, historyIndex, deckTiers.length, infectionDiscardPile.length);
+  updateUI();
+}
+
+function redo() {
+  historyIndex = Math.min(history.length - 1, historyIndex + 1);
+  const currentState = JSON.parse(history[historyIndex]);
+  deckTiers = currentState.deckTiers;
+  infectionDiscardPile = currentState.infectionDiscardPile;
+  resiliantPopulations = currentState.resiliantPopulations;
+  console.log('redo', history.length, historyIndex, deckTiers.length, infectionDiscardPile.length);
+  updateUI();
+}
 
 window.reset = () => {
   deckTiers = [Object.keys(window.cities)];
   infectionDiscardPile = [];
-  updateProbabilities();
+  history = [JSON.stringify({ deckTiers, infectionDiscardPile, resiliantPopulations })];
+  historyIndex = 0;
   updateUI();
 };
 
@@ -134,5 +200,6 @@ window.epidemic = uiUpdater(epidemic);
 window.drawInfectionCard = uiUpdater(drawInfectionCard);
 window.resiliant = uiUpdater(resiliant);
 window.city.onkeyup = uiUpdater(() => {});
-updateProbabilities();
+window.undo = undo;
+window.redo = redo;
 updateUI();
